@@ -1,0 +1,221 @@
+.app-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.app-header h1 {
+  margin-bottom: 0.25rem;
+}
+
+.app-header p {
+  margin-top: 0;
+  color: #666;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.75rem;
+}
+
+.app-nav button {
+  background: none;
+  border: 1px solid transparent;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.app-nav button.active {
+  background: #efe9ff;
+  border-color: #b9a6ff;
+  font-weight: 600;
+}
+
+.toolbar {
+  margin-bottom: 1rem;
+}
+
+.status-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.status-filter select {
+  padding: 0.35rem 0.5rem;
+}
+
+.state-message {
+  color: #555;
+  padding: 0.75rem 0;
+}
+
+.state-error {
+  color: #a4262c;
+}
+
+.idea-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.idea-card {
+  border: 1px solid #e2e2e2;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.idea-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.idea-card-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.idea-description {
+  color: #444;
+  margin: 0.5rem 0;
+}
+
+.status-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-proposed {
+  background: #eef1f4;
+  color: #4a5568;
+}
+
+.status-in-review {
+  background: #fff4d6;
+  color: #92650a;
+}
+
+.status-approved {
+  background: #e1f5e8;
+  color: #256b3f;
+}
+
+.status-rejected {
+  background: #fbe4e4;
+  color: #a4262c;
+}
+
+.tag-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.tag-list li {
+  background: #f4f3ec;
+  border-radius: 6px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.78rem;
+  color: #555;
+}
+
+.idea-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.idea-card-actions button {
+  font-size: 0.82rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.idea-card-actions button.danger {
+  color: #a4262c;
+  border-color: #f0c6c6;
+}
+
+.idea-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 480px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.form-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.field-error {
+  color: #a4262c;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.form-actions button {
+  padding: 0.55rem 1.1rem;
+  border-radius: 6px;
+  border: 1px solid #6c3ef0;
+  background: #6c3ef0;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-actions button.secondary {
+  background: white;
+  color: #333;
+  border-color: #ccc;
+  font-weight: 500;
+}
