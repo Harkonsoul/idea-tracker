@@ -11,6 +11,8 @@ See [SOLUTION.md](./SOLUTION.md) for architecture, data-model decisions, trade-o
 Azure deployment path. Per the brief's AI-tooling allowance, [AI-USAGE.md](./AI-USAGE.md)
 documents the prompts used and how the output was reviewed and verified.
 
+**Demo video:** [Loom walkthrough](https://www.loom.com/share/5edfef4d122c4a47b103c6a819ac8d05)
+
 ---
 
 ## Prerequisites
