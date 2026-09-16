@@ -61,12 +61,32 @@ dotnet run --project backend/src/IdeaTracker.Api
 The frontend reads the API's base URL from `VITE_API_BASE_URL` (see `frontend/.env.example`);
 it defaults to `http://localhost:5209` so no `.env` file is needed for local dev.
 
+## CI
+
+A minimal GitHub Actions workflow (`.github/workflows/ci.yml`) runs the backend xUnit tests,
+frontend Vitest suite, linting, and a production build on every push/PR to `main`.
+
 ## Running tests
 
 ```bash
 npm run test:api    # 3 xUnit tests over the service/repository layer (in-memory Sqlite)
 npm run test:web    # 5 Vitest tests over the API client and the idea form
 ```
+
+## Demo workbench layout
+
+The SPA is a three-column workbench, themed in SYSPRO-style dark neon:
+
+- **Left — Dev Console**: every user action (load, filter, create, edit, delete) appears as a live
+  trace with the HTTP request, the code path it travels (component → API client → controller →
+  service → repository → EF Core), a plain-English explanation, and success/error with timing.
+- **Middle — the app**: browse ideas with the status filter, submit, edit, delete.
+- **Right — Database panel**: the raw `Ideas` table rows, the *actual* SQL EF Core just executed
+  (captured via a `DbCommandInterceptor` and served from `/api/debug/sql-trace`), and production
+  security/hardening notes served from `/api/debug/security-notes`.
+
+The `/api/debug/*` endpoints (`raw-table`, `sql-trace`, `security-notes`) are demo-only and should
+be removed or gated behind Development before any production deployment.
 
 ## API reference
 

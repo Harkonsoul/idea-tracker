@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using IdeaTracker.Api.Data;
+using IdeaTracker.Api.Diagnostics;
 using IdeaTracker.Api.Repositories;
 using IdeaTracker.Api.Services;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,12 @@ var connectionString =
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=ideatracker.db";
 
+// Singleton ring-buffer of recently executed SQL, powering the demo's
+// /api/debug/sql-trace endpoint. Registered as a single instance shared by
+// every scoped DbContext.
+var sqlTrace = new SqlTraceInterceptor();
+builder.Services.AddSingleton(sqlTrace);
+
 builder.Services.AddDbContext<IdeaTrackerDbContext>(options =>
 {
     if (string.Equals(provider, "SqlServer", StringComparison.OrdinalIgnoreCase))
@@ -33,6 +40,8 @@ builder.Services.AddDbContext<IdeaTrackerDbContext>(options =>
     {
         options.UseSqlite(connectionString);
     }
+
+    options.AddInterceptors(sqlTrace);
 });
 
 builder.Services.AddScoped<IIdeaRepository, IdeaRepository>();
