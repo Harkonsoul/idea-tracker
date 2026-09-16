@@ -66,6 +66,13 @@ production deployment would want (see the Azure section below for how that gap i
 - **No view-transition/routing library** — the SPA has two "pages" (browse, create/edit), so
   a small piece of local state (`view`) does the job a router would, without the dependency.
 
+## Tooling transparency
+
+This slice was built with AI assistance (Claude via Cline), per the brief's explicit
+allowance. The architecture and trade-off decisions documented here are mine; the tool
+accelerated the boilerplate. The prompts used, the decisions I pushed back on, and how
+every change was verified are written up in [AI-USAGE.md](./AI-USAGE.md).
+
 ## Azure deployment path (pragmatic)
 
 For a slice this size, I'd deploy the API to an **Azure App Service** (Linux, `dotnet8`
