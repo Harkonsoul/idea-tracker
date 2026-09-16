@@ -15,9 +15,14 @@ public class Idea
 
     public IdeaStatus Status { get; set; } = IdeaStatus.Proposed;
 
-    public DateTimeOffset CreatedAt { get; set; }
+    // Stored (and always set) as UTC. Plain DateTime rather than
+    // DateTimeOffset — the Sqlite EF Core provider used for local dev can't
+    // translate ORDER BY on a DateTimeOffset column, only DateTime, and since
+    // every timestamp here is UTC anyway, DateTimeOffset's extra "what
+    // offset" information was never actually used.
+    public DateTime CreatedAt { get; set; }
 
-    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     /// <summary>
     /// Stored as a single delimited string column (see IdeaTrackerDbContext's

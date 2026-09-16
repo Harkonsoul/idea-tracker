@@ -41,8 +41,8 @@ public class IdeaResponseDto
     public required string Title { get; set; }
     public string Description { get; set; } = string.Empty;
     public required string Status { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
     public List<string> Tags { get; set; } = new();
 
     public static IdeaResponseDto FromEntity(Idea idea) => new()

@@ -50,7 +50,7 @@ public class IdeaService : IIdeaService
 
     public async Task<IdeaResponseDto> CreateAsync(CreateIdeaDto dto, CancellationToken ct = default)
     {
-        var now = _clock.GetUtcNow();
+        var now = _clock.GetUtcNow().UtcDateTime;
 
         var idea = new Idea
         {
@@ -76,7 +76,7 @@ public class IdeaService : IIdeaService
         idea.Description = dto.Description?.Trim() ?? string.Empty;
         idea.Status = dto.Status;
         idea.Tags = NormalizeTags(dto.Tags);
-        idea.UpdatedAt = _clock.GetUtcNow();
+        idea.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
 
         await _repository.UpdateAsync(idea, ct);
         return IdeaResponseDto.FromEntity(idea);

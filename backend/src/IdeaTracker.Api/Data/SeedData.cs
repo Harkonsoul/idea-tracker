@@ -13,7 +13,7 @@ public static class SeedData
     {
         if (db.Ideas.Any()) return;
 
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTime.UtcNow;
 
         db.Ideas.AddRange(
             new Idea

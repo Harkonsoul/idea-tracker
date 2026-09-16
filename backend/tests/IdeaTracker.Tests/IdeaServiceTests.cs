@@ -60,7 +60,7 @@ public class IdeaServiceTests : IDisposable
 
         Assert.Equal("Offline-first field reporting", created.Title);
         Assert.Equal("Proposed", created.Status);
-        Assert.Equal(new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero), created.CreatedAt);
+        Assert.Equal(new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc), created.CreatedAt);
         Assert.Equal(new[] { "mobile", "sync" }, created.Tags); // de-duplicated, trimmed
     }
 

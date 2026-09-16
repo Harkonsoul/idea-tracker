@@ -16,8 +16,10 @@ BEGIN
         Title       NVARCHAR(200)      NOT NULL,
         Description NVARCHAR(4000)     NOT NULL CONSTRAINT DF_Ideas_Description DEFAULT (N''),
         Status      NVARCHAR(20)       NOT NULL CONSTRAINT DF_Ideas_Status DEFAULT (N'Proposed'),
-        CreatedAt   DATETIMEOFFSET(3)  NOT NULL,
-        UpdatedAt   DATETIMEOFFSET(3)  NOT NULL,
+        -- UTC always (see Idea.CreatedAt doc comment) — DATETIME2 rather than
+        -- DATETIMEOFFSET since we never store a non-UTC offset.
+        CreatedAt   DATETIME2(3)       NOT NULL,
+        UpdatedAt   DATETIME2(3)       NOT NULL,
         -- Comma-delimited short strings (see Idea.Tags doc comment for the
         -- trade-off) rather than a child table for this slice.
         Tags        NVARCHAR(500)      NOT NULL CONSTRAINT DF_Ideas_Tags DEFAULT (N''),
