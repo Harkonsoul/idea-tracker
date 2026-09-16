@@ -17,13 +17,13 @@ Azure deployment path.
 | Tool | Version | Get it |
 |------|---------|--------|
 | .NET SDK | 8.0+ | https://dotnet.microsoft.com/download/dotnet/8.0 |
-| Node.js | 20+ (includes npm) | https://nodejs.org/ |
+| Node.js | 22+ (includes npm) | https://nodejs.org/ |
 
 Verify both are on your PATH:
 
 ```bash
 dotnet --version    # expect 8.x
-node --version      # expect v20+
+node --version      # expect v22+
 npm --version
 ```
 
