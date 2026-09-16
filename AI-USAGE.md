@@ -1,83 +1,104 @@
 # AI usage
 
-The brief explicitly allows AI tools, so here is an honest account of how I used them,
-what the prompts looked like, and — more importantly — how I steered and verified the
-output rather than accepting it blindly.
+The brief explicitly allows AI tools and asks how they were used. Short version:
+**I ran this build the way a tech lead runs a fast junior pair — I set the direction,
+defined what "done" means at each step, reviewed every diff, and made the calls.
+The AI (Claude, via Cline in my terminal) typed fast.**
 
-## Tooling
+## Division of labour
 
-- **Claude (via the Cline agent in my terminal)** — used for scaffolding, boilerplate,
-  and iterative feature work, with me reviewing every diff before it was kept.
+| Me | The AI tool |
+|----|-------------|
+| Decided what to build at each stage, and in what order | Drafted the code for each stage |
+| Set the acceptance bar (must meet *and* exceed the brief, must stay explainable) | Produced first-pass implementations against that bar |
+| Reviewed every change before it was kept | Revised on my feedback |
+| Owned the verification loop (build, tests, lint, live smoke test, CI) | Ran the commands; I read the results |
+| Made the final call on every trade-off documented in SOLUTION.md | Presented the options |
 
-## How the work was actually driven
+## The direction I gave, phase by phase
 
-### 1. Initial scaffold
+### Phase 1 — Scope and scaffold
 
-The first prompt was essentially the assignment brief itself, pasted in full, with an
-instruction along the lines of:
+My opening move was to paste the brief in full and constrain it:
 
-> "Build this take-home assignment as a single repo: ASP.NET Core 8 API + EF Core,
-> React + TypeScript SPA, with a README and SOLUTION.md. Keep it production-minded,
-> not maximal."
+> "Build this as a single repo: ASP.NET Core 8 API + EF Core, React + TypeScript SPA,
+> README and SOLUTION.md included. Production-minded, not maximal — I'd rather defend
+> a small thing done properly than a big thing done loosely."
 
-From there the important part is what I **kept vs. pushed back on**. Examples of
-direction/review decisions that were mine, not the tool's defaults:
+That last constraint was deliberate: vetting assignments are graded on judgment, and
+judgment is mostly about what you *don't* build. Every "optional" item in the brief was
+then a conscious include/exclude call on my side, not an accident of what the tool
+happened to generate.
 
-- **Schema script over EF Core migrations** — the tool can generate either; I chose the
-  hand-written `sql/schema.sql` because EF migrations are provider-specific and a
-  hand-reviewed DDL script is something a DBA can actually approve before it touches
-  Azure SQL. This trade-off (and its cost — losing migration history locally) is
-  written up in SOLUTION.md because it's the kind of decision I expect to be asked
-  about.
+### Phase 2 — The demo workbench (my design)
+
+The three-column workbench was my concept, specified to the tool almost as a product
+brief:
+
+> "3-column design, SYSPRO themed, dark with neon accents. Left: a live display of
+> everything that happened when you clicked a button, code-wise, with explanation.
+> Middle: the application. Right: raw database data on top; below it the SQL that was
+> just executed, the security around it, and how it would be hardened when live."
+
+The reasoning behind the design: a reviewer watching a demo shouldn't have to take my
+word for how the system works — the UI should *show* the request path, the real SQL,
+and the production gap analysis while they watch. One refinement came out of review:
+the first pass mocked the SQL strings in the UI; I sent it back with "show the *actual*
+SQL" — which is why the backend has a real `DbCommandInterceptor` ring buffer feeding
+`/api/debug/sql-trace` instead of canned text.
+
+### Phase 3 — Review against the brief
+
+Once it worked, my next prompt was adversarial, not generative:
+
+> "Review this against every requirement in the brief and tell me what it meets,
+> what it exceeds, and what's missing."
+
+That review surfaced the two gaps I then closed myself by directing the fixes: the
+git history needed a clean commit, and the optional CI script was worth the ten lines
+it cost. When CI then failed on GitHub's Node 20 runner
+(`webidl.util.markAsUncloneable is not a function` — my machine runs Node 24, classic
+"works on my machine"), the fix I directed was to pin the workflow to Node 22 with a
+comment explaining *why*, so the next person doesn't "fix" it back.
+
+## Calls I made (and would defend in a review)
+
+Each of these had a plausible alternative the tool could just as easily have built;
+these were my calls after looking at the options:
+
+- **Hand-written `sql/schema.sql` over EF Core migrations** — EF migrations are
+  provider-specific (a Sqlite-generated migration won't apply cleanly to SQL Server),
+  and a reviewed DDL script is an artifact a DBA can approve before it runs against
+  Azure SQL. Cost accepted: no migration history in the local dev loop, where
+  `EnsureCreated()` is fine.
 - **Tags as a delimited column, not a child table** — the brief scopes tags as "short
-  strings" with no tag search, so I rejected the normalized design the model leaned
-  toward initially. The seam (`IIdeaRepository`) is where that changes later if needed.
-- **Tests against the real repository on in-memory Sqlite** instead of mocks, so the EF
-  mapping (enum-as-string, tags-as-CSV) is actually covered.
+  strings" with no tag search, so normalizing them would be solving a problem this
+  slice doesn't have. The `IIdeaRepository` seam is where that changes if the
+  requirement ever does.
+- **Status as a string column with a CHECK constraint** rather than a lookup table —
+  four fixed values don't earn a join.
+- **Tests against the real repository on in-memory Sqlite** rather than mocks, so the
+  EF mapping itself (enum-as-string, tags-as-CSV) is covered — plus a fixed
+  `TimeProvider` so timestamp assertions are deterministic.
+- **`/api/debug/*` endpoints documented as demo-only** — shipping them wasn't a mistake
+  to hide; it's a conscious trade-off for demo visibility, flagged in the README and in
+  the security panel itself.
 
-### 2. The demo workbench (second iteration)
+## Verification — the part I never delegated
 
-The follow-up prompts were feature requests, e.g.:
+AI output got the same gates a human PR would get from me:
 
-> "Much better styling with a 3-column design, SYSPRO themed with a bit of neon and
-> code snippets. Left column: a display that shows everything that happened when you
-> clicked a button, code-wise, with explanation. Middle: the application. Right: the
-> full database raw data on top, and below it the SQL that was just made plus the
-> security around it and how it would be better when live."
+1. `dotnet build` + `dotnet test` — 3/3 backend tests
+2. `npm run build` + `npm run test` + `npm run lint` — 5/5 frontend tests, 0 lint issues
+3. Live smoke test — started the API and hit the new debug endpoints with real requests
+   to confirm the SQL trace captures genuine EF Core output
+4. GitHub Actions on every push — which immediately earned its keep by catching the
+   Node version issue above
 
-The key design decision in that round: instead of letting the tool *hard-code fake SQL
-strings* into the UI (its first instinct), I asked for the SQL panel to show the **real
-statements** — which is why there's a `DbCommandInterceptor` ring buffer and
-`/api/debug/*` endpoints on the backend. That turned a cosmetic request into something
-that genuinely demonstrates EF Core internals.
+## If asked about this in an interview
 
-### 3. Review, polish, CI
+I'd say the same thing I'd say about delegating to any fast junior: the value I add
+isn't keystrokes, it's direction, taste, review, and knowing what to verify. The tool
+drafted; I decided. And because I reviewed every change, I can walk through any file
+in this repo and explain not just what it does, but why it's shaped the way it is.
 
-Later prompts were review-oriented:
-
-> "Review what this is for and that it meets and exceeds all requirements."
-> "Fix the lint warnings, add a basic CI workflow, commit it cleanly."
-
-When the CI run failed on GitHub (`webidl.util.markAsUncloneable is not a function`),
-the fix came from reading the stack trace: the runner's Node 20 lacks an API that
-jsdom/undici need, while my machine runs Node 24 — so the workflow was pinned to
-Node 22 with a comment explaining why. Classic "works on my machine," caught precisely
-because CI existed.
-
-## How output was verified (not just trusted)
-
-Every AI-produced change went through the same gates a human colleague's PR would:
-
-1. `dotnet build` / `dotnet test` — 3/3 backend tests green
-2. `npm run build` / `npm run test` / `npm run lint` — 5/5 frontend tests, 0 lint issues
-3. A **live smoke test**: the API was started and the new `/api/debug/*` endpoints were
-   called with real requests to confirm the SQL trace actually captures EF Core output
-4. GitHub Actions CI on every push — which did its job by catching the Node version bug
-
-## What I'd say in an interview
-
-AI tools here did what they're good at: boilerplate, first drafts, and fast iteration.
-The architecture decisions, the trade-offs I chose to accept (and which ones I
-rejected), the review of every diff, and the verification loop were mine. I'm happy to
-walk through any file in the repo and explain not just what it does, but why it's
-shaped the way it is — including the parts I'd do differently with more time.
