@@ -66,15 +66,6 @@ production deployment would want (see the Azure section below for how that gap i
 - **No view-transition/routing library** — the SPA has two "pages" (browse, create/edit), so
   a small piece of local state (`view`) does the job a router would, without the dependency.
 
-## A note on how this was built
-
-I used Claude to help scaffold and write this slice — the architecture and trade-off
-decisions above are mine, but a chunk of the boilerplate (DTOs, the repository/service
-plumbing, the React components) was drafted with AI assistance and then reviewed. Flagging
-this in the interest of transparency, and because SYSPRO's own Next Gen platform is
-explicitly about productising AI-assisted engineering rather than pretending it doesn't
-exist.
-
 ## Azure deployment path (pragmatic)
 
 For a slice this size, I'd deploy the API to an **Azure App Service** (Linux, `dotnet8`

@@ -1,28 +1,65 @@
 # Idea Tracker
 
-A focused slice of an internal Idea Tracker: submit ideas, browse them with a status filter.
-Backend is ASP.NET Core 8 + EF Core; frontend is React + TypeScript (Vite).
+An internal tool for capturing innovation ideas from employees and tracking them through
+review (Proposed → InReview → Approved / Rejected).
 
-See [SOLUTION.md](./SOLUTION.md) for architecture, design choices, and the Azure deployment path.
+- **Backend:** ASP.NET Core 8 Web API + EF Core
+- **Database:** Sqlite locally (zero setup), designed for SQL Server / Azure SQL in production
+- **Frontend:** React 19 + TypeScript (Vite)
+
+See [SOLUTION.md](./SOLUTION.md) for architecture, data-model decisions, trade-offs, and the
+Azure deployment path.
+
+---
 
 ## Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Node.js 20+](https://nodejs.org/) and npm
+| Tool | Version | Get it |
+|------|---------|--------|
+| .NET SDK | 8.0+ | https://dotnet.microsoft.com/download/dotnet/8.0 |
+| Node.js | 20+ (includes npm) | https://nodejs.org/ |
 
-No local SQL Server install is required — see **Database** below.
-
-## Quick start (both apps at once)
+Verify both are on your PATH:
 
 ```bash
-npm install                 # installs the root dev-orchestration tooling only
-npm run install:web         # installs the frontend's own dependencies
-npm run dev                 # runs the API on :5209 and the SPA on :5173 together
+dotnet --version    # expect 8.x
+node --version      # expect v20+
+npm --version
 ```
 
-Then open **http://localhost:5173**.
+No SQL Server installation is needed for local development — the API creates and seeds a
+local Sqlite database file automatically on first run.
 
-To run them separately instead:
+## Setup
+
+From the repository root:
+
+```bash
+# 1. Restore the root dev tooling (runs both apps together)
+npm install
+
+# 2. Install the frontend's dependencies
+npm run install:web
+
+# 3. Restore + build the backend
+dotnet build backend/IdeaTracker.sln
+```
+
+## Run locally
+
+```bash
+npm run dev
+```
+
+This starts both apps together:
+
+- **API** → http://localhost:5209 (Swagger UI at http://localhost:5209/swagger)
+- **SPA** → http://localhost:5173 ← open this one
+
+The first API run creates `ideatracker.db` (Sqlite) in the API project folder and seeds four
+example ideas so the UI has content immediately.
+
+To run the two apps separately instead:
 
 ```bash
 # Terminal 1 — API
@@ -30,76 +67,83 @@ dotnet run --project backend/src/IdeaTracker.Api
 
 # Terminal 2 — frontend
 cd frontend
-npm install
 npm run dev
 ```
 
 ## Configuration (environment variables)
 
-The API reads its database configuration from these variables (or the equivalent
-`backend/src/IdeaTracker.Api/appsettings.json` keys, which default to a local Sqlite file so
-`dotnet run` works with zero setup):
+The API reads database settings from environment variables (or `appsettings.json` keys of the
+same name, which default to a local Sqlite file so nothing needs configuring for local dev):
 
-| Variable                          | Purpose                                              | Local default                |
-|------------------------------------|-------------------------------------------------------|-------------------------------|
-| `Database__Provider`              | `Sqlite` or `SqlServer`                                | `Sqlite`                      |
-| `Database__ConnectionString`      | Connection string for the selected provider            | `Data Source=ideatracker.db`  |
-| `ConnectionStrings__DefaultConnection` | Alternative to the above (standard ASP.NET Core convention, used if set) | — |
+| Variable | Purpose | Local default |
+|----------|---------|----------------|
+| `Database__Provider` | `Sqlite` or `SqlServer` | `Sqlite` |
+| `Database__ConnectionString` | Connection string for the selected provider | `Data Source=ideatracker.db` |
+| `ConnectionStrings__DefaultConnection` | Standard ASP.NET Core alternative to the above | — |
+| `Cors__AllowedOrigins` | Origins the API accepts calls from | `http://localhost:5173` |
 
-To run against a real SQL Server instead of the local Sqlite file:
+The frontend reads the API base URL from `VITE_API_BASE_URL` (see `frontend/.env.example`);
+it defaults to `http://localhost:5209`, so no `.env` file is required locally.
+
+### Running against real SQL Server instead of Sqlite
 
 ```bash
-export Database__Provider=SqlServer
-export Database__ConnectionString="Server=localhost;Database=IdeaTracker;Trusted_Connection=True;TrustServerCertificate=True"
-# then apply backend/sql/schema.sql to that database first, e.g.:
-sqlcmd -S localhost -d IdeaTracker -i backend/sql/schema.sql
+# PowerShell
+$env:Database__Provider = "SqlServer"
+$env:Database__ConnectionString = "Server=localhost;Database=IdeaTracker;Trusted_Connection=True;TrustServerCertificate=True"
+sqlcmd -S localhost -d IdeaTracker -i backend/sql/schema.sql   # apply the schema first
 dotnet run --project backend/src/IdeaTracker.Api
 ```
 
-(On Windows PowerShell, use `$env:Database__Provider = "SqlServer"` etc. instead of `export`.)
-
-The frontend reads the API's base URL from `VITE_API_BASE_URL` (see `frontend/.env.example`);
-it defaults to `http://localhost:5209` so no `.env` file is needed for local dev.
-
-## CI
-
-A minimal GitHub Actions workflow (`.github/workflows/ci.yml`) runs the backend xUnit tests,
-frontend Vitest suite, linting, and a production build on every push/PR to `main`.
+On bash/macOS use `export Database__Provider=SqlServer` etc.
 
 ## Running tests
 
 ```bash
-npm run test:api    # 3 xUnit tests over the service/repository layer (in-memory Sqlite)
-npm run test:web    # 5 Vitest tests over the API client and the idea form
+npm run test:api    # backend: 3 xUnit tests over the service/repository layer (in-memory Sqlite)
+npm run test:web    # frontend: 5 Vitest tests over the API client and the idea form
 ```
 
-## Demo workbench layout
+Lint the frontend:
 
-The SPA is a three-column workbench, themed in SYSPRO-style dark neon:
+```bash
+cd frontend
+npm run lint
+```
 
-- **Left — Dev Console**: every user action (load, filter, create, edit, delete) appears as a live
-  trace with the HTTP request, the code path it travels (component → API client → controller →
-  service → repository → EF Core), a plain-English explanation, and success/error with timing.
-- **Middle — the app**: browse ideas with the status filter, submit, edit, delete.
-- **Right — Database panel**: the raw `Ideas` table rows, the *actual* SQL EF Core just executed
-  (captured via a `DbCommandInterceptor` and served from `/api/debug/sql-trace`), and production
-  security/hardening notes served from `/api/debug/security-notes`.
+## CI
 
-The `/api/debug/*` endpoints (`raw-table`, `sql-trace`, `security-notes`) are demo-only and should
-be removed or gated behind Development before any production deployment.
+A minimal GitHub Actions workflow (`.github/workflows/ci.yml`) runs the backend tests,
+frontend tests, linting, and a production build on every push/PR to `main`.
 
 ## API reference
 
-Swagger UI is available at `http://localhost:5209/swagger` when running in Development.
+Swagger UI: http://localhost:5209/swagger (Development only)
 
-| Method | Route                          | Notes                                   |
-|--------|----------------------------------|------------------------------------------|
-| GET    | `/api/ideas?status=&page=&pageSize=` | `status` optional; pagination optional  |
-| GET    | `/api/ideas/{id}`               |                                            |
-| POST   | `/api/ideas`                    | Body: `{ title, description, tags }`     |
-| PUT    | `/api/ideas/{id}`                | Body adds `status` (optional endpoint)   |
-| DELETE | `/api/ideas/{id}`                | Optional endpoint                        |
-| GET    | `/health`                       | Basic liveness check                     |
+| Method | Route | Notes |
+|--------|-------|-------|
+| GET | `/api/ideas?status=&page=&pageSize=` | `status` optional (`Proposed`, `InReview`, `Approved`, `Rejected`); pagination optional |
+| GET | `/api/ideas/{id}` | |
+| POST | `/api/ideas` | Body: `{ title, description, tags }` |
+| PUT | `/api/ideas/{id}` | Body adds `status` |
+| DELETE | `/api/ideas/{id}` | |
+| GET | `/health` | Basic liveness check |
+
+## The UI: three-column workbench
+
+The SPA is a three-column, dark-themed workbench:
+
+- **Left — Dev Console:** every interaction (load, filter, create, edit, delete) is traced
+  live with the HTTP request, the code path it travels (component → API client → controller →
+  service → repository → EF Core), a plain-English explanation, and its status/duration.
+- **Middle — the app:** browse ideas with the status filter, submit, edit, delete.
+- **Right — Database panel:** raw `Ideas` table rows, the actual SQL EF Core just executed
+  (captured by a `DbCommandInterceptor` and served from `/api/debug/sql-trace`), and notes on
+  how the setup would be hardened for a real production deployment.
+
+> The `/api/debug/*` endpoints (`raw-table`, `sql-trace`, `security-notes`) exist to power
+> this panel and are demo-only — remove them or gate them behind Development-only routing
+> before any production deployment.
 
 ## Project layout
 
@@ -109,5 +153,7 @@ backend/
   tests/IdeaTracker.Tests/ xUnit tests
   sql/schema.sql           SQL Server / Azure SQL schema script
 frontend/
-  src/                     React + TypeScript SPA
+  src/api/                 Typed API clients (fetch-based)
+  src/components/          React components
+  src/types/               Shared TypeScript models
 ```
